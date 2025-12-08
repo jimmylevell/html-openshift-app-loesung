@@ -1,0 +1,14 @@
+# docker-compose.yml for ZLI Ük Module 109/210 Task 4.2
+# This file defines the services for running a Flask web application in Docker containers.
+
+services:
+  # Web service configuration
+  web:
+    build:
+      context: ..
+      dockerfile: Dockerfile.web
+    image: ghcr.io/benschwarz1982/html-docker-app:latest
+    container_name: html-docker-app
+    ports:
+      - "8080:80"
+    restart: unless-stopped

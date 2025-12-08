@@ -1,0 +1,8 @@
+# Dockerfile for running a NGINX web application in a container
+# This Dockerfile is used for ZLI Ük Module 109/210 Task 6.2
+
+# Use the NGINX unprivileged image
+FROM nginxinc/nginx-unprivileged
+
+# Copy the entire directory into the default directory of NGINX.
+COPY /app/web /usr/share/nginx/html
