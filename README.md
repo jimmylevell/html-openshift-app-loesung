@@ -109,3 +109,36 @@ oc set triggers deploy/html-openshift-app --from-image=html-openshift-app:latest
 ```html
 oc delete all --selector=app=html-openshift-app
 ```
+
+## Visualization
+```mermaid
+graph TB
+    subgraph "External Access"
+        Client[External Client/Browser]
+    end
+
+    subgraph "OpenShift Cluster"
+        Route[Route<br/>html-openshift-app<br/>TLS: edge termination]
+
+        Service[Service<br/>html-openshift-app<br/>Port: 8080]
+
+        subgraph "Deployment"
+            Deploy[Deployment<br/>html-openshift-app<br/>Replicas: 1]
+
+            subgraph "Pod"
+                Container[Container<br/>html-openshift-app<br/>Image: ghcr.io/modul-i-ch-109/html-openshift-app:v1<br/>Port: 8080]
+            end
+        end
+    end
+
+    Client -->|HTTPS| Route
+    Route -->|HTTP| Service
+    Service -->|Port 8080| Container
+    Deploy -.manages.-> Container
+
+    style Client fill:#e1f5ff
+    style Route fill:#fff4e6
+    style Service fill:#f3e5f5
+    style Deploy fill:#e8f5e9
+    style Container fill:#fce4ec
+```
