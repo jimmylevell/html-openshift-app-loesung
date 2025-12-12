@@ -13,19 +13,24 @@
 
 ### Build and push new Image with nginxinc/nginx-unprivileged
 
-```html
+```bash
 FROM nginxinc/nginx-unprivileged
 # Copy the entire directory into the default directory of NGINX.
 COPY /app /usr/share/nginx/html
 ```
 
-```html
-docker build -f Dockerfile.web -t ghcr.io/<githubusername>/html-openshift-app:latest .
+```bash
+docker build -f Dockerfile.web -t ghcr.io/jimmylevell/html-openshift-app:latest .
 ```
 
-```html
-docker push ghcr.io/<githubusername>/html-openshift-app:latest
+```bash
+docker run -d -p 8080:8080 --name html-openshift-app ghcr.io/jimmylevell/html-openshift-app:latest
 ```
+
+```bash
+docker push ghcr.io/jimmylevell/html-openshift-app:latest
+```
+
 
 ### OpenShift
 
@@ -33,13 +38,13 @@ docker push ghcr.io/<githubusername>/html-openshift-app:latest
 
 1. Sart
 
-```html
+```bash
 oc apply -f oc/01-with-deployment --recursive
 ```
 
 2. Delete
 
-```html
+```bash
 oc delete all --selector=app=html-openshift-app
 ```
 
@@ -47,13 +52,13 @@ oc delete all --selector=app=html-openshift-app
 
 1. Create OC template
 
-```html
+```bash
 oc apply -f oc/02-with-template --recursive
 ```
 
 2. Start
 
-```html
+```bash
 oc process html-openshift-app \
   -p NAMESPACE="<Your-Namespace>" \
   -p GIT_SOURCE_URI="<Your-Git-Repo-URL>" \
@@ -63,19 +68,19 @@ oc process html-openshift-app \
 
 3. Triggers
 
-```html
+```bash
 oc set triggers deploy/html-openshift-app --from-image=html-openshift-app:latest -c html-openshift-app
 ```
 
 4. Delete
 
-```html
+```bash
 oc delete all --selector=app=html-openshift-app
 ```
 
 5. Delete OC template
 
-```html
+```bash
 oc delete template html-openshift-app
 ```
 
@@ -83,7 +88,7 @@ oc delete template html-openshift-app
 
 1. Andjust Namespace in Image URL of 030-Deployment.yaml
 
-```html
+```bash
 spec:
   template:
     spec:
@@ -94,19 +99,19 @@ spec:
 
 2. Start
 
-```html
+```bash
 oc apply -f oc/03-with-buildconfig --recursive
 ```
 
 3. Triggers
 
-```html
+```bash
 oc set triggers deploy/html-openshift-app --from-image=html-openshift-app:latest -c html-openshift-app
 ```
 
 4. Delete
 
-```html
+```bash
 oc delete all --selector=app=html-openshift-app
 ```
 

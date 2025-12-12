@@ -23,7 +23,7 @@ spec:
   source:
     type: Git
     git:
-      uri: 'https://github.com/benschwarz1982/html-openshift-app-loesung.git'
+      uri: 'https://github.com/jimmylevell/html-openshift-app-loesung.git'
     contextDir: /app/web
     sourceSecret:
       name: html-openshift-app-github

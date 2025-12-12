@@ -1,0 +1,87 @@
+name: Deploy to OpenShift
+
+on:
+  workflow_run:
+    workflows: ["Build and Push Docker Image"]
+    types:
+      - completed
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Image tag to deploy (e.g., main, sha-abc123)'
+        required: false
+        default: 'latest'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  OPENSHIFT_PROJECT: ${{ secrets.OPENSHIFT_PROJECT }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install OpenShift CLI
+        uses: redhat-actions/openshift-tools-installer@v1
+        with:
+          oc: latest
+
+      - name: Log in to OpenShift
+        run: |
+          oc login --token=${{ secrets.OPENSHIFT_TOKEN }} --server=${{ secrets.OPENSHIFT_SERVER }}
+          oc project ${{ env.OPENSHIFT_PROJECT }}
+
+      - name: Determine image tag
+        id: image_tag
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "tag=${{ github.event.inputs.image_tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update deployment image
+        run: |
+          IMAGE_TAG="${{ steps.image_tag.outputs.tag }}"
+          IMAGE_URL="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${IMAGE_TAG}"
+
+          # Update the image in the deployment file
+          sed -i "s|image:.*|image: ${IMAGE_URL}|g" oc/01-with-deployment/030-Deployment.yaml
+
+          echo "Deploying image: ${IMAGE_URL}"
+
+      - name: Apply OpenShift manifests
+        run: |
+          oc apply -f oc/01-with-deployment/030-Deployment.yaml
+          oc apply -f oc/01-with-deployment/040-Service.yaml
+          oc apply -f oc/01-with-deployment/050-Route.yaml
+
+      - name: Wait for rollout
+        run: |
+          oc rollout status deployment/html-openshift-app --timeout=5m
+
+      - name: Get application URL
+        id: route
+        run: |
+          ROUTE_URL=$(oc get route html-openshift-app -o jsonpath='{.spec.host}')
+          echo "url=https://${ROUTE_URL}" >> $GITHUB_OUTPUT
+          echo "Application URL: https://${ROUTE_URL}"
+
+      - name: Verify deployment
+        run: |
+          curl -f -s -o /dev/null -w "%{http_code}" ${{ steps.route.outputs.url }} || echo "Warning: Application may not be ready yet"
+
+      - name: Summary
+        run: |
+          echo "## Deployment Summary :rocket:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image**: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.image_tag.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Project**: ${{ env.OPENSHIFT_PROJECT }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **URL**: ${{ steps.route.outputs.url }}" >> $GITHUB_STEP_SUMMARY

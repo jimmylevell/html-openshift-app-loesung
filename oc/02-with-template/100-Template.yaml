@@ -14,10 +14,10 @@ parameters:
     required: true
   - name: GIT_SOURCE_URI
     description: The URI to the GIT source for your application
-    value: https://github.com/benschwarz1982/html-openshift-app.git
+    value: https://github.com/jimmylevell/html-openshift-app.git
     required: true
   - name: GIT_USERNAME
-    description: The Username of your GIT Account 
+    description: The Username of your GIT Account
     required: true
   - name: GIT_PAT
     description: The Personal Access Token (PAT) of your GIT Account
@@ -33,7 +33,7 @@ objects:
         app.kubernetes.io/part-of: html-openshift-app
       annotations:
         template.openshift.io/expose-username: "${GIT_USERNAME}"
-        template.openshift.io/expose-passsword: "${GIT_PAT}"      
+        template.openshift.io/expose-passsword: "${GIT_PAT}"
     stringData:
       username: "${GIT_USERNAME}"
       password: "${GIT_PAT}"
@@ -75,7 +75,7 @@ objects:
                   protocol: TCP
               image: 'image-registry.openshift-image-registry.svc:5000/${NAMESPACE}/html-openshift-app:latest'
               imagePullPolicy: Always
-              
+
   - kind: Service
     apiVersion: v1
     metadata:
@@ -108,7 +108,7 @@ objects:
       tls:
         termination: edge
         insecureEdgeTerminationPolicy: Redirect
-  
+
   - kind: ImageStream
     apiVersion: image.openshift.io/v1
     metadata:
