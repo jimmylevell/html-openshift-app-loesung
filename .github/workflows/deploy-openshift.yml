@@ -59,9 +59,7 @@ jobs:
 
       - name: Apply OpenShift manifests
         run: |
-          oc apply -f oc/01-with-deployment/030-Deployment.yaml
-          oc apply -f oc/01-with-deployment/040-Service.yaml
-          oc apply -f oc/01-with-deployment/050-Route.yaml
+          oc apply -f oc/01-with-deployment --recursive
 
       - name: Wait for rollout
         run: |
